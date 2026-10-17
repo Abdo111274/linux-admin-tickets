@@ -3,7 +3,7 @@
 ## Environment
 - OS: Red Hat Enterprise Linux 9
 - Category: Linux Administration
-- Priority: Medium
+
 
 ## Problem
 A new IT employee named ahmed needs access to
