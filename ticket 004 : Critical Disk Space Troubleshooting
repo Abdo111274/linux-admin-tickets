@@ -1,0 +1,185 @@
+# Ticket #004: Critical Disk Space Troubleshooting
+
+## Environment
+- Operating System: Red Hat Enterprise Linux 9
+- Category: Storage Management and Troubleshooting
+- Priority: High
+
+## Problem Description
+
+The monitoring system reports that the `/data` filesystem is almost full.
+
+The system administrator must investigate disk usage, identify large files and directories, safely free up space, and verify that the filesystem has enough available storage.
+
+## Tasks
+
+1. Check filesystem usage.
+2. Identify which directories consume the most space.
+3. Find large files.
+4. Investigate old log files.
+5. Safely free up disk space.
+6. Verify that filesystem usage has decreased.
+
+## Solution
+
+### 1. Check Filesystem Usage
+
+    df -h
+
+Check the usage of the `/data` filesystem:
+
+    df -h /data
+
+Expected result:
+- Identify the total filesystem size.
+- Check used and available space.
+- Identify the percentage of disk usage.
+
+### 2. Identify Large Directories
+
+Display the size of directories inside `/data`:
+
+    du -sh /data/* 2>/dev/null
+
+Sort directories by size:
+
+    du -sh /data/* 2>/dev/null | sort -h
+
+This helps identify which directories consume the most disk space.
+
+### 3. Find Large Files
+
+Find files larger than 500 MB inside `/data`:
+
+    find /data -type f -size +500M -exec ls -lh {} \;
+
+To find files larger than 100 MB:
+
+    find /data -type f -size +100M -exec ls -lh {} \;
+
+Review the results before deleting anything.
+
+### 4. Investigate Old Log Files
+
+Check the size of log files:
+
+    du -sh /var/log/* 2>/dev/null
+
+Find log files larger than 100 MB:
+
+    find /var/log -type f -size +100M -exec ls -lh {} \;
+
+Check system journal disk usage:
+
+    journalctl --disk-usage
+
+Do not delete active logs or important system files without understanding their purpose.
+
+### 5. Check for Deleted Files Still Using Disk Space
+
+Sometimes a process continues using disk space after a file has been deleted.
+
+Check for deleted files that are still open:
+
+    lsof +L1
+
+If a large deleted file appears, identify the process before deciding how to release the space.
+
+Do not terminate processes blindly.
+
+### 6. Safely Free Up Disk Space
+
+First, identify unnecessary files and confirm that they can be removed.
+
+For this lab, create a test file to simulate a large temporary file:
+
+    mkdir -p /data/tmp
+    dd if=/dev/zero of=/data/tmp/testfile.img bs=1M count=600 status=progress
+
+Check the file size:
+
+    ls -lh /data/tmp/testfile.img
+
+Check filesystem usage again:
+
+    df -h /data
+
+Remove only the test file created for this lab:
+
+    rm -i /data/tmp/testfile.img
+
+Confirm the deletion when prompted.
+
+Verify that the test file is gone:
+
+    ls -l /data/tmp/
+
+### 7. Verify Disk Usage
+
+Check filesystem usage again:
+
+    df -h /data
+
+Compare the available space and usage percentage with the previous results.
+
+Check directory usage:
+
+    du -sh /data/* 2>/dev/null
+
+## Expected Results
+
+- The administrator identifies the filesystem with high disk usage.
+- Large directories and files are identified.
+- Unnecessary files are investigated before removal.
+- The test file is safely removed.
+- Available disk space increases after removing the test file.
+- The final filesystem usage is verified.
+
+## Troubleshooting Notes
+
+If `df -h` reports high disk usage but `du` does not show enough files to explain it, investigate:
+
+- Deleted files still held open by running processes.
+- Filesystem reserved space.
+- Files hidden beneath mount points.
+- Filesystem-specific issues.
+
+Useful commands:
+
+    df -h
+    df -i
+    du -xhd1 /data 2>/dev/null
+    lsof +L1
+
+Notes:
+- `df -h` displays filesystem space usage.
+- `df -i` displays inode usage.
+- `du -xhd1 /data` summarizes directory usage without crossing filesystem boundaries.
+- `lsof +L1` helps identify open files that have been deleted.
+
+## Skills Practiced
+
+- Linux Disk Space Troubleshooting
+- Filesystem Usage Analysis
+- Disk Usage Investigation
+- File Management
+- Log Investigation
+- Linux Troubleshooting
+- System Administration
+
+## Verification Evidence
+
+Record the actual command outputs before and after the cleanup.
+
+Document:
+- Initial disk usage.
+- Largest directories or files discovered.
+- Root cause of the disk space issue.
+- Corrective action taken.
+- Final disk usage.
+
+Do not claim that the incident is resolved unless the verification results confirm it.
+
+## Commit Message
+
+Add Ticket 004 - Disk Space Troubleshooting
