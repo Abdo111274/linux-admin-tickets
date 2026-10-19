@@ -1,0 +1,296 @@
+# Project 002: Linux Storage Management with LVM
+
+## Project Overview
+
+This project demonstrates Linux storage administration using Logical Volume Manager (LVM) on Red Hat Enterprise Linux 9 (RHEL 9).
+
+The objective is to configure disk storage, create physical volumes, combine them into a volume group, create a logical volume, format it with XFS, and mount it persistently.
+
+## Environment
+
+- Operating System: Red Hat Enterprise Linux 9
+- Technology: Logical Volume Manager (LVM)
+- Filesystem: XFS
+- Project Type: Linux System Administration Lab
+- Difficulty: Beginner to Intermediate
+
+## Scenario
+
+A company needs additional storage space for its applications and internal data.
+
+As a Linux System Administrator, I must configure two additional disks using LVM and make the resulting storage available through the `/data` directory.
+
+The storage must remain mounted after a system reboot.
+
+## Project Requirements
+
+- Identify available disks.
+- Create LVM physical volumes.
+- Create a volume group named `vg0`.
+- Create a 2 GB logical volume named `lv_data`.
+- Format the logical volume with XFS.
+- Mount the filesystem at `/data`.
+- Configure persistent mounting.
+- Verify the storage configuration.
+
+## Step 1: Identify Available Disks
+
+Display available block devices:
+
+    lsblk
+
+Display existing filesystems and mount points:
+
+    lsblk -f
+
+Check filesystem space usage:
+
+    df -h
+
+Identify two disks dedicated to this lab.
+
+Example disk names:
+
+- `/dev/sdb`
+- `/dev/sdc`
+
+Important: Verify the actual disk names before proceeding. Never assume these device names are available on every system.
+
+## Step 2: Create Physical Volumes
+
+Initialize the two lab disks for LVM:
+
+    sudo pvcreate /dev/sdb /dev/sdc
+
+Verify the physical volumes:
+
+    sudo pvs
+
+Display detailed physical volume information:
+
+    sudo pvdisplay
+
+Expected result:
+
+Both disks should appear as LVM physical volumes.
+
+## Step 3: Create a Volume Group
+
+Create a volume group named `vg0`:
+
+    sudo vgcreate vg0 /dev/sdb /dev/sdc
+
+Verify the volume group:
+
+    sudo vgs
+
+Display detailed volume group information:
+
+    sudo vgdisplay vg0
+
+Expected result:
+
+The volume group `vg0` should contain both physical volumes.
+
+## Step 4: Create a Logical Volume
+
+Create a 2 GB logical volume named `lv_data`:
+
+    sudo lvcreate -L 2G -n lv_data vg0
+
+Verify the logical volume:
+
+    sudo lvs
+
+Display the logical volume path:
+
+    sudo lvdisplay /dev/vg0/lv_data
+
+Expected result:
+
+- Volume Group: `vg0`
+- Logical Volume: `lv_data`
+- Logical Volume Size: 2 GB
+
+## Step 5: Create an XFS Filesystem
+
+Format the logical volume with XFS:
+
+    sudo mkfs.xfs /dev/vg0/lv_data
+
+Verify the filesystem:
+
+    lsblk -f
+
+Important: Formatting a device can destroy existing data. Run this command only on the newly created logical volume dedicated to this lab.
+
+## Step 6: Create the Mount Point
+
+Create the `/data` directory:
+
+    sudo mkdir -p /data
+
+Mount the logical volume:
+
+    sudo mount /dev/vg0/lv_data /data
+
+Verify the mount:
+
+    df -h /data
+
+Check the block devices:
+
+    lsblk
+
+Expected result:
+
+The logical volume should be mounted at `/data`.
+
+## Step 7: Test the Filesystem
+
+Create a test file:
+
+    sudo touch /data/testfile.txt
+
+Verify the file:
+
+    ls -l /data
+
+Check the mounted filesystem:
+
+    findmnt /data
+
+Expected result:
+
+The test file should exist inside `/data`, and the logical volume should be mounted successfully.
+
+## Step 8: Configure Persistent Mounting
+
+Identify the filesystem UUID:
+
+    sudo blkid /dev/vg0/lv_data
+
+Back up the current filesystem table:
+
+    sudo cp -a /etc/fstab /etc/fstab.bak
+
+Open the filesystem table:
+
+    sudo vi /etc/fstab
+
+Add an entry using the actual UUID returned by `blkid`:
+
+    UUID=<YOUR_FILESYSTEM_UUID> /data xfs defaults 0 0
+
+Replace `<YOUR_FILESYSTEM_UUID>` with the real UUID. Do not copy the placeholder literally.
+
+Validate the configuration:
+
+    sudo findmnt --verify
+
+Test the entry without rebooting:
+
+    sudo mount -a
+
+Verify the mount:
+
+    findmnt /data
+
+Important: An incorrect `/etc/fstab` entry can cause boot problems. Back up the file and validate the entry before rebooting.
+
+## Step 9: Verify the Final Configuration
+
+Check physical volumes:
+
+    sudo pvs
+
+Check volume groups:
+
+    sudo vgs
+
+Check logical volumes:
+
+    sudo lvs
+
+Check filesystem usage:
+
+    df -h /data
+
+Check the mount source and target:
+
+    findmnt /data
+
+Check the filesystem UUID:
+
+    sudo blkid /dev/vg0/lv_data
+
+## Expected Results
+
+- Two lab disks are initialized as physical volumes.
+- Both physical volumes belong to `vg0`.
+- The `lv_data` logical volume has a size of 2 GB.
+- The logical volume uses the XFS filesystem.
+- The filesystem is mounted at `/data`.
+- A test file can be created inside `/data`.
+- The `/etc/fstab` entry is valid.
+- The filesystem is configured to mount automatically at boot.
+
+## Skills Demonstrated
+
+- Linux Block Device Management
+- Logical Volume Manager (LVM)
+- Physical Volume Management
+- Volume Group Administration
+- Logical Volume Creation
+- XFS Filesystem Administration
+- Filesystem Mounting
+- Persistent Mount Configuration
+- Linux Storage Troubleshooting
+
+## Troubleshooting Notes
+
+### Check Physical Volumes
+
+    sudo pvs
+
+### Check Volume Groups
+
+    sudo vgs
+
+### Check Logical Volumes
+
+    sudo lvs
+
+### Check Mounted Filesystems
+
+    df -h
+    findmnt
+
+### Check Filesystem Information
+
+    lsblk -f
+
+### Check Persistent Mount Configuration
+
+    cat /etc/fstab
+    sudo findmnt --verify
+
+## Project Summary
+
+In this lab, I practiced configuring Linux storage using LVM on RHEL 9.
+
+I created physical volumes, combined them into a volume group, created a logical volume, formatted it with XFS, and configured persistent mounting.
+
+This project demonstrates fundamental storage administration skills relevant to an entry-level Linux System Administrator role.
+
+## Verification Evidence
+
+Record the actual command outputs and results after completing the lab.
+
+Document any errors encountered, how they were resolved, and the final verification results.
+
+Do not claim successful completion of any step until it has been tested.
+
+## Git Commit Message
+
+Add Project 002 - Linux Storage Management with LVM
